@@ -1,0 +1,13 @@
+{
+    "code": 200,
+    "message": "",
+    "data": {
+        "code": "1.1.0",
+        "size": "9.9M",
+        "des": "1.测试\\r\\n",
+        "versionCode": 2,
+        "versionName": "1.1.0",
+        "downloadUrl": "http://caiyao.name/releases/microreader_1.3.8.apk",
+        "releaseNote": "哈哈哈测试"
+    }
+}
