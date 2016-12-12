@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">1WeRead</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+
+    <string name="action_settings">Settings</string>
+    <string name="action_save">保存</string>
+
+
+    <string name="common_set_read">标记为已读</string>
+    <string name="common_set_unread">标记为未读</string>
+
+    <string name="share">分享到</string>
+    <string name="share_tail">\r\n(分享自WeRead，Read the fucking world ！)</string>
+    <string name="addressLabel">源码地址：</string>
+    <string name="projectAddress">is coming</string>
+</resources>
