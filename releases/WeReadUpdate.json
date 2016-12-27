@@ -2,11 +2,11 @@
     "code": 200,
     "message": "",
     "data": {
-        "versionCode": 1,
-        "versionName": "1.0.2",
-        "fileName": "WeRead_v1.0.2.apk",
-        "size": "2.4M",
-        "downloadUrl": "https://github.com/Brandon-Winterfell/WeRead/releases/download/v1.0.2/WeRead_v1.0.2.apk",
-        "releaseNote": "1.【新增】fucking source\\r\\n2.【修复】部分已知BUG\\r\\n\n."
+        "versionCode": 2,
+        "versionName": "1.0.3",
+        "fileName": "WeRead_v1.0.3.apk",
+        "size": "2.46M",
+        "downloadUrl": "https://github.com/Brandon-Winterfell/WeRead/releases/download/v1.0.3/WeRead_v1.0.3.apk",
+        "releaseNote": "【修复】部分已知BUG\\r\\n\n."
     }
 }
