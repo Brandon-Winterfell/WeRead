@@ -1,0 +1,12 @@
+{
+    "code": 200,
+    "message": "",
+    "data": {
+        "versionCode": 2,
+        "versionName": "1.0.3",
+        "fileName": "WeRead_v1.0.3.apk",
+        "size": "2.46M",
+        "downloadUrl": "https://github.com/Brandon-Winterfell/WeRead/releases/download/v1.0.3/WeRead_v1.0.3.apk",
+        "releaseNote": "【修复】部分已知BUG."
+    }
+}
