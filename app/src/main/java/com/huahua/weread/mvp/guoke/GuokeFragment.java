@@ -12,12 +12,10 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.huahua.weread.R;
 import com.huahua.weread.bean.GuokeHotItem;
-import com.huahua.weread.http.NetUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,14 +31,12 @@ import butterknife.Unbinder;
 public class GuokeFragment extends Fragment
         implements SwipeRefreshLayout.OnRefreshListener, IGuokeView {
 
-    @BindView(R.id.progressbarCommon)
-    ProgressBar mProgressbarCommon;
     @BindView(R.id.recyclerviewCommon)
     RecyclerView mRecyclerviewCommon;
     @BindView(R.id.swiperefreshCommon)
     SwipeRefreshLayout mSwiperefreshCommon;
 
-    private GuokePresenter mPresenter;  // 该类的头脑
+    private GuokePresenter mPresenter;  // 该类的头脑 灵魂 核心
     private Context mContext;
     private Unbinder mUnbinder;
 
@@ -68,7 +64,7 @@ public class GuokeFragment extends Fragment
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_common, container, false);
+        View view = inflater.inflate(R.layout.fragment_guoke, container, false);
         mUnbinder = ButterKnife.bind(this, view);
         return view;
     }
@@ -77,6 +73,9 @@ public class GuokeFragment extends Fragment
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         initMemberVariable();
         setView();
+
+        // 用户一进来就调用下拉刷新去请求加载数据，不请求的话，哪来的数据给用户看
+        onRefresh();
     }
 
     @Override
@@ -122,21 +121,6 @@ public class GuokeFragment extends Fragment
         mRecyclerviewCommon.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-//                if (dy > 0) {  // 向下滚动
-//                    visibleItemCount = mLinearLayoutManager.getChildCount();
-//                    totalItemCount = mLinearLayoutManager.getItemCount();
-//                    pastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
-//
-//                    /**
-//                     * TODO 还有个判断的  就是滑动的时候不加载  停止的时候才加载
-//                     */
-//                    // 没有正在加载并且滑动到底部
-//                    if (!mLoadingMore && (visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-//                        mLoadingMore = true;
-//                        onLoadMore();
-//                    }
-//                }
-
             }
 
             @Override
@@ -149,46 +133,48 @@ public class GuokeFragment extends Fragment
                 pastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
 
                 /**
-                 * TODO 还有个判断的  就是滑动的时候不加载  停止的时候才加载
+                 * 滑动的时候不加载  停止的时候才加载
+                 * 不是正在加载的状态并且滑动到底部 这是触发加载更多的条件
+                 *
+                 * 已经是正在加载更多，正在跟服务器交互的过程中了，网络慢的话不能一下子完成
+                 * 所以设置个变量，不能出现上一次还没有完成，就触发下一次请求
                  */
-                // 没有正在加载并且滑动到底部
-                // 已经是正在加载更多，正在跟服务器交互的过程中了，网络慢的话不能一下子完成
-                // 所以设置个变量，不能出现上一次还没有完成，就触发下一次请求
                 if (!mLoadingMore
                         && newState == RecyclerView.SCROLL_STATE_IDLE
-                        && (visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-                    mLoadingMore = true;
-                    onLoadMore();
+                        && (visibleItemCount + pastVisiblesItems) >= totalItemCount
+                        && !mIsRefresh) {
+                    /**
+                     * 显示底部布局
+                     */
+                    mAdapter.showFooter();
                     if (mDataList.size() > 1) {
-                        mRecyclerviewCommon.scrollToPosition(mDataList.size() - 1);
+                        mRecyclerviewCommon.scrollToPosition(mDataList.size());
                     }
+
+                    // 设置加载更多的标识
+                    mLoadingMore = true;
+                    // 设置参数
+                    // mOffset++;  // 自增1  // 如果前面次失败的话，不能在这里自增1，会漏掉一页，需要在成功加载后才自增
+                    // 去执行加载更多的网络请求
+                    mPresenter.loadGuokeHot(mOffset);
                 }
             }
         });
         // 设置RecycleView的adapter
         mAdapter = new GuokeAdapter(mContext, mDataList);
         mRecyclerviewCommon.setAdapter(mAdapter);
-
-        /**
-         * 应该这样子 先加载缓存 判断有网络连接后 再请求网络
-         */
-        if (!NetUtils.isConnected(mContext)) {
-            Toast.makeText(mContext, "网络异常，请检查网络连接", Toast.LENGTH_LONG).show();
-        }
-
-        // 调用下拉刷新
-        onRefresh();
     }
 
     // SwipeRefreshLayout下拉刷新的回调方法
     @Override
     public void onRefresh() {
-        if (mIsRefresh) {
+        if (mIsRefresh || mLoadingMore) {
             return; // 已经是下拉刷新状态了
         }
 
-        // 设置正在下拉刷新状态
+        // 将下拉刷新控件显示出来
         mSwiperefreshCommon.setRefreshing(true);
+        // 设置下拉刷新状态标识
         mIsRefresh = true;
         // 重置参数
         mOffset = 0;
@@ -196,55 +182,37 @@ public class GuokeFragment extends Fragment
         mPresenter.loadGuokeHot(mOffset);
     }
 
-    /**
-     * 上拉加载更多调用的方法
-     */
-    public void onLoadMore() {
-        mPresenter.loadGuokeHot(mOffset);
-    }
-
-    // view层接口的4个实现方法
-    @Override
-    public void showProgressDialog() {
-        if (mProgressbarCommon != null) {
-            mProgressbarCommon.setVisibility(View.VISIBLE);
-        }
-    }
+    // view层接口的3个实现方法
 
     @Override
-    public void hideProgressDialog() {
-        // 成功失败都会调用这个方法，做一些成功失败共同的事情
-        mLoadingMore = false; // 上拉加载更多的
-
-        if (mSwiperefreshCommon != null) {
+    public void hideSwipeRefreshLayoutOrFooter() {
+        // 如果是下拉刷新
+        if (mIsRefresh) {
+            mIsRefresh = false;
             mSwiperefreshCommon.setRefreshing(false);
         }
-        if (mProgressbarCommon != null) {
-            mProgressbarCommon.setVisibility(View.INVISIBLE);
+
+        // 如果是上拉加载更多
+        if (mLoadingMore) {
+            mLoadingMore = false;
+            mAdapter.hideFooter();
         }
     }
 
     @Override
     public void updateSuccessData(List<GuokeHotItem> guokeHotItemslist) {
         if (mIsRefresh) {
-            mIsRefresh = false; // 表示下拉刷新的 // 这个一定要放到这里 不能放到hideProgressDialog里
-            mDataList.clear();  // 下拉刷新要清空数据
-            mAdapter.notifyDataSetChanged();
+            mAdapter.clear();
         }
 
-        mDataList.addAll(guokeHotItemslist);
-        mAdapter.notifyDataSetChanged();
-
-        mOffset++;  // 自增1
+        mAdapter.addMore(guokeHotItemslist);
+        mOffset++;  // 只能在这里自增1   // 失败的情况不能自增
     }
 
     @Override
-    public void showLoadFailMsg(String errMessage) {
-        mIsRefresh = false; // 表示下拉刷新的
-
-        Toast.makeText(mContext, "出错了" + errMessage, Toast.LENGTH_LONG).show();
+    public void showMsgWithLongToast(String errMessage) {
+        Toast.makeText(mContext, errMessage, Toast.LENGTH_LONG).show();
     }
-
 
 }
 

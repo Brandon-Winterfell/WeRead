@@ -1,9 +1,9 @@
 package com.huahua.weread.mvp.zhihu;
 
-import com.huahua.weread.bean.ZhiHuDailyItem;
 import com.huahua.weread.bean.ZhiHuResponse;
 import com.huahua.weread.http.HttpManager;
 
+import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
 
@@ -15,21 +15,15 @@ import rx.Subscription;
 
 public class ZHModel {
 
-    /**
-     * 需要传入一个subscriber观察者，作用是为了方便进行回调
-     *
-     * @param subscriber
-     * @return
-     */
-    public Subscription loadZhiHuDailyLast(Subscriber<ZhiHuResponse> subscriber) {
-        Subscription s = HttpManager.getInstance().loadZhiHuDaily(subscriber);
-        return s;
+    // 获取最新日期的日报
+    public Observable<ZhiHuResponse> loadZhiHuDailyLast() {
+        return HttpManager.getInstance().loadZhiHuDaily();
+
     }
 
-
-    public Subscription loadTheDaily(String date, Subscriber<ZhiHuResponse> subscriber) {
-        Subscription s = HttpManager.getInstance().loadTheDaily(date, subscriber);
-        return s;
+    // 获取某个日期前的知乎日报  传了今天的日期获取昨天的日报
+    public Observable<ZhiHuResponse> loadTheDaily(String date) {
+        return HttpManager.getInstance().loadTheDaily(date);
     }
 
 }

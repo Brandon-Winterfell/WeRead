@@ -1,11 +1,13 @@
 package com.huahua.weread.mvp.gankio;
 
-import android.util.Log;
-
 import com.huahua.weread.bean.GankioFuliResponse;
+import com.huahua.weread.utils.LogUtils;
 
 import rx.Subscriber;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by Administrator on 2016/12/8.
@@ -18,6 +20,8 @@ public class GankioPresenter {
 
     private Subscription mSubscription;  // 用来解绑  如果执行了onerror 或oncompleted自动解绑的
 
+    private Boolean isHasOnErrorReturn = false;
+
     public GankioPresenter(IGankioView view) {
         mView = view;
         mModel = new GankioModel();
@@ -28,29 +32,48 @@ public class GankioPresenter {
 
     public void loadGankioFuli(int pageIndex) {
         // 真正去干这事的是model
-        mSubscription = mModel.loadGankioFuli(pageIndex, new Subscriber<GankioFuliResponse>() {
-            @Override
-            public void onCompleted() {
+        mSubscription = mModel.loadGankioFuli(pageIndex)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .onErrorReturn(new Func1<Throwable, GankioFuliResponse>() {
+                    @Override
+                    public GankioFuliResponse call(Throwable throwable) {
+                        LogUtils.LOGI("GankioPresenter", ">>>>>  onErrorReturn   >>>>>");
+                        throwable.printStackTrace();
+                        isHasOnErrorReturn = true;
+                        return null;
+                    }
+                })
+                .subscribe(new Subscriber<GankioFuliResponse>() {
+                    @Override
+                    public void onCompleted() {
+                        isHasOnErrorReturn = false;
+                        // 隐藏加载更多底部布局或者下拉刷新控件
+                        mView.hideSwipeRefreshLayoutOrFooter();
+                    }
 
-            }
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        isHasOnErrorReturn = false;
+                        mView.showLoadFailMsg("出错了,请稍后再试");
+                        // 隐藏加载更多底部布局或者下拉刷新控件
+                        mView.hideSwipeRefreshLayoutOrFooter();
+                    }
 
-            // 这个匿名内部类持有activity的引用了 Subscription解绑会不会释放这个引用 不释放 是否就内存泄漏的可能
-            // new Subscriber这个匿名内部类持有GankioPresenter的引用，而GankioPresenter持有GuokeFragment的引用，dangerous
-            // 在Activity的onDestroy()方法中调用unsubscribe()方法，会阻止泄露的发生。
-            // 然后你调用的是Fragment的onDestroyView吧，因为回调的是mView.xxx，view都没了，空指针
-            @Override
-            public void onError(Throwable e) {
-                mView.hideProgressDialog();
-                mView.showLoadFailMsg(e.getMessage());
-                e.printStackTrace();
-            }
+                    @Override
+                    public void onNext(GankioFuliResponse gankioFuliResponse) {
+                        if (gankioFuliResponse == null) {
+                            if (isHasOnErrorReturn) {
+                                // observable发生了错误
+                            }
+                            mView.showLoadFailMsg("出错了,请稍后再试");
+                            return;
+                        }
 
-            @Override
-            public void onNext(GankioFuliResponse gankioFuliResponse) {
-                mView.hideProgressDialog();
-                mView.updateSuccessData(gankioFuliResponse.getResults());
-            }
-        });
+                        mView.updateSuccessData(gankioFuliResponse.getResults());
+                    }
+                });
     }
 
     /**
@@ -60,6 +83,7 @@ public class GankioPresenter {
         if (mSubscription != null) {
                 mSubscription.unsubscribe();
         }
+        mView = null;  // 这样就没有Fragment（activity）的引用啦
     }
 
 }

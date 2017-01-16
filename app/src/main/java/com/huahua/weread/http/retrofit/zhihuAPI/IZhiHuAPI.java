@@ -4,7 +4,6 @@ import com.huahua.weread.bean.ZhiHuArticle;
 import com.huahua.weread.bean.ZhiHuResponse;
 
 import retrofit2.http.GET;
-import retrofit2.http.Part;
 import retrofit2.http.Path;
 import rx.Observable;
 

@@ -4,14 +4,21 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+    </style>
+
+    <!-- 黑色状态栏 -->
+    <style name="AppTheme.NoActionBar.blackstatusBar">
+        <item name="android:statusBarColor">@android:color/black</item>
+    </style>
+
+
+    <!-- 这是给MainActivity的 DrawLayout用的 -->
+    <style name="AppTheme.NoActionBarDrawer">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-
-        <!-- 只能竖屏 -->
-        <item name="android:screenOrientation">portrait</item>
-        <item name="android:configChanges">orientation|screenSize</item>
-
-        //沉浸状态栏
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
     </style>
 </resources>

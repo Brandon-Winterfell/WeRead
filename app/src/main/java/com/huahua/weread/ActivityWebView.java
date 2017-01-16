@@ -3,6 +3,8 @@ package com.huahua.weread;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -10,7 +12,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -23,7 +24,9 @@ import android.webkit.WebViewClient;
 
 public class ActivityWebView extends AppCompatActivity {
 
-    Toolbar toolbar = null;
+    private Toolbar toolbar = null;
+    private NestedScrollView mNestedScrollView;
+    private FloatingActionButton mFab;
     private WebView mWebView;
     private String mUrl = null;
     private String mTitle = null;
@@ -42,7 +45,17 @@ public class ActivityWebView extends AppCompatActivity {
             Log.i("test", "url : " + mUrl);
         }
 
+        // 初始化以及设置view
+        setViews();
+    }
+
+    private void setViews() {
+        /**
+         * 设置toolbar
+         */
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        // 这个要在setSupportActionBar前
+        toolbar.setTitle(mTitle);
         setSupportActionBar(toolbar);
         // Get a support ActionBar corresponding to this toolbar
         ActionBar ab = getSupportActionBar();
@@ -50,16 +63,24 @@ public class ActivityWebView extends AppCompatActivity {
         ab.setDisplayHomeAsUpEnabled(true);
         ab.setHomeAsUpIndicator(R.drawable.ic_action_cancel);
 
-        toolbar.setTitle(mTitle);
+        /**
+         * 点击FloatingActionButton滚动到顶部
+         */
+        mNestedScrollView = (NestedScrollView) findViewById(R.id.nest);
+        mFab = (FloatingActionButton) findViewById(R.id.fabButton);
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mNestedScrollView.smoothScrollTo(0, 0);
+            }
+        });
 
+        /**
+         * 设置webview
+         */
         mWebView = (WebView) findViewById(R.id.webview);
         mWebView.loadUrl(mUrl);
 
-
-        setViews();
-    }
-
-    private void setViews() {
         mWebView.setScrollbarFadingEnabled(false);
         mWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         WebSettings webSettings = mWebView.getSettings();
@@ -125,13 +146,27 @@ public class ActivityWebView extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        // webview内存泄漏
+        // webview内存泄漏  // 亲测 只写这四行还是会造成内存泄漏的
+        // See http://www.cnblogs.com/whoislcj/p/6001422.html
+//        if (mWebView != null) {
+//            ((ViewGroup)mWebView.getParent()).removeView(mWebView);
+//            mWebView.destroy();
+//            mWebView = null;
+//        }
+
+
+        destroyWebView();
+        android.os.Process.killProcess(android.os.Process.myPid());
+        super.onDestroy();
+    }
+
+    private void destroyWebView() {
         if (mWebView != null) {
-            ((ViewGroup)mWebView.getParent()).removeView(mWebView);
+            mWebView.pauseTimers();
+            mWebView.removeAllViews();
             mWebView.destroy();
             mWebView = null;
         }
-        super.onDestroy();
     }
 }
 

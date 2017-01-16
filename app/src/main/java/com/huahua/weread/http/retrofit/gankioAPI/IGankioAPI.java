@@ -4,7 +4,6 @@ import com.huahua.weread.bean.GankioFuliResponse;
 
 import retrofit2.http.GET;
 import retrofit2.http.Path;
-import retrofit2.http.Query;
 import rx.Observable;
 
 /**
@@ -17,7 +16,6 @@ public interface IGankioAPI {
 
     @GET("api/data/福利/10/{pageIndex}")
     Observable<GankioFuliResponse> getFuli(@Path("pageIndex") int pageIndex);
-
 }
 
 

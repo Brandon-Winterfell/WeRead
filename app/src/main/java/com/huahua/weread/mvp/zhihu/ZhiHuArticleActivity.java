@@ -3,17 +3,14 @@ package com.huahua.weread.mvp.zhihu;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -28,6 +25,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Subscriber;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -43,8 +43,10 @@ public class ZhiHuArticleActivity extends AppCompatActivity {
     Toolbar mToolbar;
     @BindView(R.id.webview)
     WebView mWebview;
+
     @BindView(R.id.nest)
     NestedScrollView mNest;
+
     @BindView(R.id.fabButton)
     FloatingActionButton mFabButton;
 
@@ -73,7 +75,6 @@ public class ZhiHuArticleActivity extends AppCompatActivity {
         }
 
 
-
         setViews();
 
         if (mType == TYPE_ZHIHU) {
@@ -92,6 +93,8 @@ public class ZhiHuArticleActivity extends AppCompatActivity {
      * 对view控件的设置
      */
     private void setViews() {
+        // setTitle得在setSupportActionBar前设置
+        mToolbar.setTitle(mTitle);
         // toolbar的设置
         setSupportActionBar(mToolbar);
         // Get a support ActionBar corresponding to this toolbar
@@ -100,7 +103,6 @@ public class ZhiHuArticleActivity extends AppCompatActivity {
         ab.setDisplayHomeAsUpEnabled(true);
         ab.setHomeAsUpIndicator(R.drawable.ic_action_cancel);
 
-        mToolbar.setTitle(mTitle);
 
         // fabButton  滑动到顶部
         mFabButton.setOnClickListener(new View.OnClickListener() {
@@ -147,26 +149,42 @@ public class ZhiHuArticleActivity extends AppCompatActivity {
      */
     private void getHtml(String articleId) {
         // 增加个mSubscription字段，主要是为了解绑操作
-        mSubscription = HttpManager.getInstance().loadZhihuArticle(articleId, new Subscriber<ZhiHuArticle>() {
-            @Override
-            public void onCompleted() {
+        mSubscription = HttpManager.getInstance().loadZhihuArticle(articleId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .onErrorReturn(new Func1<Throwable, ZhiHuArticle>() {
+                    @Override
+                    public ZhiHuArticle call(Throwable throwable) {
+                        // 相当于try catch
+                        Toast.makeText(ZhiHuArticleActivity.this,
+                                "出错了,请稍后重试", Toast.LENGTH_SHORT).show();
+                        return null;
+                    }
+                })
+                .subscribe(new Subscriber<ZhiHuArticle>() {
+                    @Override
+                    public void onCompleted() {
 
-            }
+                    }
 
-            @Override
-            public void onError(Throwable e) {
-                Toast.makeText(ZhiHuArticleActivity.this,
-                        "发生错误：" + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(ZhiHuArticleActivity.this,
+                                "出错了,请稍后重试", Toast.LENGTH_SHORT).show();
+                    }
 
-            @Override
-            public void onNext(ZhiHuArticle zhiHuArticle) {
+                    @Override
+                    public void onNext(ZhiHuArticle zhiHuArticle) {
+                        if (zhiHuArticle == null) {
+                            // observable发生了错误，会发送一个null过来的
+                            return;
+                        }
 
-                mHtmlUrl = zhiHuArticle.getShare_url();
-                mWebview.loadUrl(mHtmlUrl);
+                        mHtmlUrl = zhiHuArticle.getShare_url();
+                        mWebview.loadUrl(mHtmlUrl);
 
-            }
-        });
+                    }
+                });
     }
 
     @Override
@@ -209,13 +227,26 @@ public class ZhiHuArticleActivity extends AppCompatActivity {
         if (mSubscription != null) {
             mSubscription.unsubscribe();
         }
-        // webview内存泄漏
+//        // webview内存泄漏  // 这样子还是会内存泄漏的
+        // See http://www.cnblogs.com/whoislcj/p/6001422.html
+//        if (mWebview != null) {
+//            ((ViewGroup)mWebview.getParent()).removeView(mWebview);
+//            mWebview.destroy();
+//            mWebview = null;
+//        }
+
+        destroyWebView();
+        android.os.Process.killProcess(android.os.Process.myPid());
+        super.onDestroy();
+    }
+
+    private void destroyWebView() {
         if (mWebview != null) {
-            ((ViewGroup)mWebview.getParent()).removeView(mWebview);
+            mWebview.pauseTimers();
+            mWebview.removeAllViews();
             mWebview.destroy();
             mWebview = null;
         }
-        super.onDestroy();
     }
 }
 

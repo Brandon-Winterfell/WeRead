@@ -1,7 +1,6 @@
 package com.huahua.weread.mvp.weixin;
 
 import com.huahua.weread.bean.WeiXinNews;
-import com.huahua.weread.bean.WeiXinResponse;
 
 import java.util.List;
 
@@ -15,16 +14,6 @@ import java.util.List;
 public interface IWXView {
 
     /**
-     * 显示正在加载进度条
-     */
-    public abstract void showProgressDialog();
-
-    /**
-     * 隐藏进度条
-     */
-    void hideProgressDialog();
-
-    /**
      * 显示成功加载的数据
      * @param wxNewslist
      */
@@ -33,7 +22,12 @@ public interface IWXView {
     /**
      * 显示加载失败
      */
-    void showLoadFailMsg(String errMessage);
+    void showMsgWithLongToast(String message);
+
+    /**
+     * 最后根据是下拉更新还是加载更多而隐藏掉下拉刷新控件或者底部加载更多布局
+     */
+    void hideSwipeRefreshLayoutOrFooter();
 }
 
 

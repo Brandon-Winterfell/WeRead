@@ -11,13 +11,12 @@
     tools:context="com.huahua.weread.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
-    <!-- fragment的容器   然后个问题是Fragment也有自己的toolbar 没？ -->
+    <!-- fragment的容器 -->
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
     </FrameLayout>
-
 
 </RelativeLayout>
 

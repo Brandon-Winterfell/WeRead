@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">1WeRead</string>
+    <string name="app_name">WeRead</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -15,5 +15,11 @@
     <string name="share">分享到</string>
     <string name="share_tail">\r\n(分享自WeRead，Read the fucking world ！)</string>
     <string name="addressLabel">源码地址：</string>
-    <string name="projectAddress">is coming</string>
+    <string name="projectAddress">https://github.com/Brandon-Winterfell/WeRead</string>
+
+    // 权限适配显示的dialog
+    <string name="rationale_ask_again">WeRead需要写SD卡权限，才能完成下载更新。请到手机设置里授予权限。 </string>
+    <string name="title_settings_dialog">请求权限</string>
+    <string name="setting">设置</string>
+    <string name="cancel">取消</string>
 </resources>

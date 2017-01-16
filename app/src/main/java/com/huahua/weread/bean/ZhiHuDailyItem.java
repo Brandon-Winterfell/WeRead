@@ -1,7 +1,5 @@
 package com.huahua.weread.bean;
 
-import java.util.List;
-
 /**
  * Created by Administrator on 2016/12/6.
  */

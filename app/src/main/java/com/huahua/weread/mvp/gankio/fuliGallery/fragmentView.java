@@ -131,6 +131,14 @@ public class fragmentView extends Fragment {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        // Need to call clear-up
+        mAttacher.cleanup();
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // 加载菜单
         inflater.inflate(R.menu.menu_image, menu);
@@ -166,109 +174,10 @@ public class fragmentView extends Fragment {
             }
 
             savePicInExtStoragePublicDirectory(dir);
-
-
-            //savePicInSDCard();
         }
 
         return super.onOptionsItemSelected(item);
     }
-
-    /**
-     * 保存图片到SD卡上
-     * 目录 Environment.getExternalStorageDirectory() + GankIOPic
-     */
-    private void savePicInSDCard() {
-        Target target = new Target() {
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                // SD卡不能写 返回
-                if (!isExternalStorageWritable()) {  // 是否挂载了SD卡
-                    Toast.makeText(mActivity, "保存失败，检测不到SD卡", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                // 假如是6.0以上的系统，需要动态申请权限 // 需要写SD卡权限 没有权限  返回
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (!requestPermission()) {
-                        return;
-                    }
-                }
-                Toast.makeText(mActivity, "正在保存图片...", Toast.LENGTH_SHORT).show();
-
-                /**
-                 * 判断存储目录
-                 */
-                Boolean dirExists = false;  // 目录是否存在
-                // 获取SD卡对应的存储目录
-                File sdCardDir = Environment.getExternalStorageDirectory();
-                Log.i(LOG_TAG, "Environment.getExternalStorageDirectory >>>>>> " + sdCardDir.getAbsolutePath());
-                File sdCardGankIODir = new File(sdCardDir, "GankIOPic");
-                if (!sdCardGankIODir.exists()) {
-                    dirExists = sdCardGankIODir.mkdir();
-                } else {
-                    dirExists = true;
-                }
-                // 目录创建不成功 返回
-                if (!dirExists) {
-                    Toast.makeText(mActivity, "图片保存失败", Toast.LENGTH_LONG).show();
-                    Log.i(LOG_TAG, "GankIO目录创建失败");
-                    return;
-                }
-
-                /**
-                 * 保存图片的操作
-                 */
-                Log.i(LOG_TAG, "GankIOPic" + sdCardGankIODir.getAbsolutePath());
-                // 目录也建出来了  那就执行保存图片到本地了 // 以当前系统的时间戳作为图片的名字
-                String imageName = System.currentTimeMillis() + ".png";
-                // 传入要创建图片的名字 及路径
-                File file1 = new File(sdCardGankIODir.getAbsolutePath(), imageName);
-                FileOutputStream fos = null;
-                try {
-                    fos = new FileOutputStream(file1);
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-                    fos.close();  // 关闭流操作
-                    Log.i(LOG_TAG, "图片已经保存到" + sdCardGankIODir.getAbsolutePath());
-                    Toast.makeText(mActivity,
-                            "图片已经保存到" + sdCardGankIODir.getAbsolutePath(), Toast.LENGTH_LONG).show();
-                    // 这里是主线程 TODO 开子线程保存图片的话 又涉及与主线程的通信
-                    // TODO 开子线程的话 建一个单线程的线程池更好 如果用户很多的保存操作 就省了很多的开销
-                    // 图片应该本来就在内存中了 断网测试一下 是的 断网也能保存图片
-                    // 保存图片后发送广播通知更新数据库
-                    Uri uri = Uri.fromFile(file1);
-                    mActivity.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Toast.makeText(mActivity, "图片保存失败", Toast.LENGTH_LONG).show();
-                } finally {
-                    if (fos != null) {
-                        try {
-                            fos.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                Toast.makeText(mActivity, "图片保存失败", Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {
-
-            }
-        };
-
-        /**
-         * 指定target任务加载图片
-         */
-        mPicasso.load(mUrl).into(target);
-    }
-
 
     /**
      * 要有写SD卡权限

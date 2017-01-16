@@ -1,9 +1,9 @@
 package com.huahua.weread.mvp.gankio;
 
-import com.huahua.weread.bean.GankioFuliItem;
 import com.huahua.weread.bean.GankioFuliResponse;
 import com.huahua.weread.http.HttpManager;
 
+import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
 
@@ -14,8 +14,8 @@ import rx.Subscription;
 public class GankioModel {
 
 
-    public Subscription loadGankioFuli(int pageIndex, Subscriber<GankioFuliResponse> subscriber) {
-         return HttpManager.getInstance().loadGankioFuli(pageIndex, subscriber);
+    public Observable<GankioFuliResponse> loadGankioFuli(int pageIndex) {
+         return HttpManager.getInstance().loadGankioFuli(pageIndex);
     }
 
 

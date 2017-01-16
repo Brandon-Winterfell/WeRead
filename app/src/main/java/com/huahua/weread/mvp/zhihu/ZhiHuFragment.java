@@ -12,7 +12,6 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.huahua.weread.R;
@@ -32,8 +31,6 @@ import butterknife.Unbinder;
 public class ZhiHuFragment extends Fragment
         implements SwipeRefreshLayout.OnRefreshListener, IZHView {
 
-    @BindView(R.id.progressbarCommon)
-    ProgressBar mProgressbarCommon;
     @BindView(R.id.recyclerviewCommon)
     RecyclerView mRecyclerviewCommon;
     @BindView(R.id.swiperefreshCommon)
@@ -78,6 +75,9 @@ public class ZhiHuFragment extends Fragment
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         initMemberVariable();
         setView();
+
+        // 调用下拉刷新
+        onRefresh();
     }
 
     @Override
@@ -123,22 +123,7 @@ public class ZhiHuFragment extends Fragment
         mRecyclerviewCommon.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-//                if (dy > 0) {  // 向下滚动
-//                    visibleItemCount = mLinearLayoutManager.getChildCount();
-//                    totalItemCount = mLinearLayoutManager.getItemCount();
-//                    pastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
-//
-//                    /**
-//                     * TODO 还有个判断的  就是滑动的时候不加载  停止的时候才加载
-//                     */
-//                    // 没有正在加载并且滑动到底部
-//                    // 已经是正在加载更多，正在跟服务器交互的过程中了，网络慢的话不能一下子完成
-//                    // 所以设置个变量，不能出现上一次还没有完成，就触发下一次请求
-//                    if (!mLoadingMore && (visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-//                        mLoadingMore = true;
-//                        onLoadMore();
-//                    }
-//                }
+
             }
 
             @Override
@@ -150,20 +135,24 @@ public class ZhiHuFragment extends Fragment
                 totalItemCount = mLinearLayoutManager.getItemCount();
                 pastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
 
-                /**
-                 * TODO 还有个判断的  就是滑动的时候不加载  停止的时候才加载
-                 */
-                // 没有正在加载并且滑动到底部
+                // 没有正在加载并且滑动到底部并且滑动已经停止
                 // 已经是正在加载更多，正在跟服务器交互的过程中了，网络慢的话不能一下子完成
                 // 所以设置个变量，不能出现上一次还没有完成，就触发下一次请求
                 if (!mLoadingMore
                         && newState == RecyclerView.SCROLL_STATE_IDLE
-                        && (visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-                    mLoadingMore = true;
-                    onLoadMore();
+                        && (visibleItemCount + pastVisiblesItems) >= totalItemCount
+                        && !mIsRefresh) {
+                    /**
+                     * 显示底部布局
+                     */
+                    mAdapter.showFooter();
                     if (mDataList.size() > 1) {
-                        mRecyclerviewCommon.scrollToPosition(mDataList.size() - 1);
+                        mRecyclerviewCommon.scrollToPosition(mDataList.size());
                     }
+
+                    mLoadingMore = true;
+                    // 上拉加载更多 传入今天的日期 获取昨天的知乎日报
+                    mPresenter.loadTheDaily(mCurrentLoadedDate);
                 }
             }
         });
@@ -171,81 +160,54 @@ public class ZhiHuFragment extends Fragment
         // 设置RecycleView的adapter
         mAdapter = new ZhiHuAdapter(mContext, mDataList);
         mRecyclerviewCommon.setAdapter(mAdapter);
-
-        // 调用下拉刷新
-        onRefresh();
     }
 
     // SwipeRefreshLayout的下拉刷新回调方法
     @Override
     public void onRefresh() {
-        if (mIsRefresh) {
+        if (mIsRefresh || mLoadingMore) {
             return;
-            // 其实这里可以不用这个判断return，用presenter.unBindSubscriber，只是这样比较费流量吧
-            // 是数据返回后才发现解绑，这时候把数据丢弃吧
         }
         // 设置下拉刷新状态
         mSwiperefreshCommon.setRefreshing(true);
-        // 重置参数
-        mCurrentLoadedDate = "0";
         // 表示下拉刷新的变量
         mIsRefresh = true;
-        // 请求数据
+        // 重置参数
+        mCurrentLoadedDate = "0";
+        // 请求数据 获取最新日期的日报
         mPresenter.loadZhiHuDailyLast();
     }
 
-    /**
-     * 上拉加载更多 传入今天的日期 获取昨天的知乎日报
-     */
-    private void onLoadMore() {
-        mPresenter.loadTheDaily(mCurrentLoadedDate);
-    }
 
-    // 4个IZHView的具体实现方法
+    // 3个IZHView的具体实现方法
+
+
     @Override
-    public void showProgressDialog() {
-        if (mProgressbarCommon != null) {
-            mProgressbarCommon.setVisibility(View.VISIBLE);
-        }
-    }
-
-    // 不管成功或者失败都会调用这个方法的，那就可以在这里设置一些共有的变量了 mLoadingMore
-    @Override
-    public void hideProgressDialog() {
-        mLoadingMore = false; // 上拉加载更多的
-
-        if (mSwiperefreshCommon != null) {
+    public void hideSwipeRefreshLayoutOrFooter() {
+        if (mIsRefresh) {
+            mIsRefresh = false;
             mSwiperefreshCommon.setRefreshing(false);
         }
-        if (mProgressbarCommon != null) {
-            mProgressbarCommon.setVisibility(View.INVISIBLE);
+
+        if (mLoadingMore) {
+            mLoadingMore = false;
+            mAdapter.hideFooter();
         }
     }
 
     @Override
     public void updateSuccessData(ZhiHuResponse zhiHuResponse) {
         if (mIsRefresh) {
-            mIsRefresh = false; // 表示下拉刷新的 // 这个一定要放到这里 不能放到hideProgressDialog里
-            mDataList.clear();  // 下拉刷新才清空数据
-            mAdapter.notifyDataSetChanged();
+            mAdapter.clear();
         }
-        // 更新日期
+        // 更新日期 这是知乎的一种方式 用今天的日期取昨天的数据
         mCurrentLoadedDate = zhiHuResponse.getDate();
-        mDataList.addAll(zhiHuResponse.getStories());
-        mAdapter.notifyDataSetChanged();
-        // 怪了 为什么一直在加载  而他的却不会
-        // 如果没有填满屏幕 加了这个是作死的节奏呀  是一直在加载 不断的执行onLoadMore
-//        if (!mRecyclerviewCommon.canScrollVertically(View.SCROLL_INDICATOR_BOTTOM)) {
-//            onLoadMore();
-//            Log.i("caonima", "我要看看是不是一直在加载" + mCurrentLoadedDate);
-//        }
+        mAdapter.addMore(zhiHuResponse.getStories());
     }
 
     @Override
     public void showLoadFailMsg(String errMessage) {
-        mIsRefresh = false; // 表示下拉刷新的
-
-        Toast.makeText(mContext, "发生错误：" + errMessage, Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, errMessage, Toast.LENGTH_SHORT).show();
     }
 
 

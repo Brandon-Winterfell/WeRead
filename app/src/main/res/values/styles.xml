@@ -6,24 +6,47 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- 只能竖屏 -->
+        <item name="android:screenOrientation">portrait</item>
+        <item name="android:configChanges">orientation|screenSize</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+    </style>
 
-        <!-- 只能竖屏 -->
-        <item name="android:screenOrientation">portrait</item>
-        <item name="android:configChanges">orientation|screenSize</item>
+    <!-- v21黑色状态栏，这里需要放一个同名style -->
+    <style name="AppTheme.NoActionBar.blackstatusBar"/>
 
-
-        <!--<item name="android:windowTranslucentStatus">true</item>-->
-        <!-- 沉浸式状态栏 kitkat api 19 -->
-        <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
+    <!-- 这是给MainActivity的 DrawLayout用的 给v21一下版本使用-->
+    <style name="AppTheme.NoActionBarDrawer">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
 
+    <style name="WindowAnimationFadeInOut">
+        <item name="@android:windowEnterAnimation">@anim/fade_in</item>
+        <item name="@android:windowExitAnimation">@anim/fade_out</item>
+    </style>
+
 </resources>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

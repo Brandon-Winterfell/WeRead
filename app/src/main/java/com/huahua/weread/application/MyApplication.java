@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 
 import com.huahua.weread.http.CacheInterceptor;
 import com.huahua.weread.http.picasso.OkHttp3Downloader;
+import com.squareup.leakcanary.LeakCanary;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -29,9 +30,23 @@ public class MyApplication extends Application {
     // okhttp3实例
     private static OkHttpClient mOkHttp3Client;
 
+    // 可以提供给整个app的用application context
+    private static Context sAppContext;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        sAppContext = this;
+
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            // This process is dedicated to LeakCanary for heap analysis.
+            // You should not init your app in this process.
+            return;
+        }
+        LeakCanary.install(this);
+        // Normal app init code...
+
+        // 下面是不是应该写成工具类去调用，而不是写在这里
 
         // 构造自定义缓存的OKHttpClient实例
         CacheInterceptor cacheInterceptor = new CacheInterceptor(getApplicationContext());
@@ -52,7 +67,7 @@ public class MyApplication extends Application {
         return new OkHttpClient.Builder()
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .writeTimeout(20, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
                 .cache(cache)
                 .addInterceptor(cacheInterceptor)
                 .addNetworkInterceptor(cacheInterceptor)
@@ -104,7 +119,7 @@ public class MyApplication extends Application {
         // 红色：代表从网络下载的图片
         // 绿色：代表从内存中加载的图片
         // 深蓝色：代表从磁盘缓存加载的图片
-        picasso.setIndicatorsEnabled(true);
+        // picasso.setIndicatorsEnabled(true);
 
         return picasso;
     }
@@ -123,6 +138,10 @@ public class MyApplication extends Application {
      */
     public static OkHttpClient getOkHttp3Client() {
         return mOkHttp3Client;
+    }
+
+    public static Context  getAppContext() {
+        return sAppContext;
     }
 }
 

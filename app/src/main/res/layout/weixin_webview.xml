@@ -2,6 +2,8 @@
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.huahua.weread.ActivityWebView"
     android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -15,6 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/AppTheme.PopupOverlay"/>
     </android.support.design.widget.AppBarLayout>
 
@@ -22,6 +25,7 @@
         android:id="@+id/nest"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <WebView
@@ -30,6 +34,25 @@
             android:layout_height="match_parent"
             />
     </android.support.v4.widget.NestedScrollView>
+
+    <!-- 如果删了app:layout_anchor="@+id/nest" app:layout_anchorGravity="bottom|right" -->
+    <!-- 在我的华为4.4.4上  FloatingActionButton不见了 没有效果-->
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabButton"
+        android:layout_width="92dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:layout_margin="10dp"
+        android:src="@drawable/ic_arrow_upward_white_24px"
+        app:backgroundTint="@color/colorAccent"
+        app:borderWidth="0dp"
+        app:elevation="6dp"
+        app:fabSize="normal"
+        app:layout_anchor="@+id/nest"
+        app:layout_anchorGravity="bottom|right"
+        app:layout_behavior="com.huahua.weread.utils.ScrollAwareFABBehavior"
+        app:pressedTranslationZ="12dp"
+        app:rippleColor="#33728dff"/>
 
 </android.support.design.widget.CoordinatorLayout>
 

@@ -3,7 +3,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-
+    <!-- 刚才两个都是wrap_content的 -->
     <ImageView
         android:id="@+id/imageViewForGirl"
         android:layout_gravity="center"

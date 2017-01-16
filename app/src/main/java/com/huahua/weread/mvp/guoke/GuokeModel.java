@@ -1,9 +1,9 @@
 package com.huahua.weread.mvp.guoke;
 
-import com.huahua.weread.bean.GuokeHotItem;
 import com.huahua.weread.bean.GuokeHotResponse;
 import com.huahua.weread.http.HttpManager;
 
+import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
 
@@ -15,10 +15,9 @@ import rx.Subscription;
 
 public class GuokeModel {
 
-    public Subscription loadGuokeHot(int offset, Subscriber<GuokeHotResponse> subscriber) {
-        return HttpManager.getInstance().loadGuokeHot(offset, subscriber);
+    public Observable<GuokeHotResponse> loadGuokeHot(int offset) {
+        return HttpManager.getInstance().loadGuokeHot(offset);
     }
-
 }
 
 

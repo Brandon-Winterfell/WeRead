@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.SwitchCompat
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="wrap_content"
+              android:layout_height="match_parent"
+    android:gravity="left|center_vertical"
+    app:buttonTint="@color/colorAccent"
+    />
+
+<!-- buttonTinnt 要API21 那在4.4.4上是什么效果 -->
+<!-- app:buttonTint="@color/colorAccent" 这个兼容点 草 -->

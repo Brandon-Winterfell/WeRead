@@ -1,6 +1,5 @@
 package com.huahua.weread.mvp.gankio;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,10 +12,8 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.huahua.weread.MainActivity;
 import com.huahua.weread.R;
 import com.huahua.weread.bean.GankioFuliItem;
 
@@ -34,8 +31,6 @@ import butterknife.Unbinder;
 public class GankioFragment extends Fragment
         implements SwipeRefreshLayout.OnRefreshListener, IGankioView {
 
-    @BindView(R.id.progressbarCommon)
-    ProgressBar mProgressbarCommon;
     @BindView(R.id.recyclerviewCommon)
     RecyclerView mRecyclerviewCommon;
     @BindView(R.id.swiperefreshCommon)
@@ -78,6 +73,9 @@ public class GankioFragment extends Fragment
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         initMemberVariable();
         setView();
+
+        // 调用下拉刷新
+        onRefresh();
     }
 
     @Override
@@ -117,20 +115,6 @@ public class GankioFragment extends Fragment
         mRecyclerviewCommon.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-//                if (dy > 0) {  // 向下滚动
-//                    visibleItemCount = mLinearLayoutManager.getChildCount();
-//                    totalItemCount = mLinearLayoutManager.getItemCount();
-//                    pastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
-//
-//                    /**
-//                     * TODO 还有个判断的  就是滑动的时候不加载  停止的时候才加载
-//                     */
-//                    // 没有正在加载并且滑动到底部
-//                    if (!mLoadingMore && (visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-//                        mLoadingMore = true;
-//                        onLoadMore();
-//                    }
-//                }
             }
 
             @Override
@@ -143,34 +127,38 @@ public class GankioFragment extends Fragment
                 pastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
 
                 /**
-                 * TODO 还有个判断的  就是滑动的时候不加载  停止的时候才加载
+                 * 滑动的时候不加载  停止的时候才加载
                  */
-                // 没有正在加载并且滑动到底部
+                // 没有正在加载并且滑动到底部并且滑动到底部并且没有正在下拉刷新
                 // 已经是正在加载更多，正在跟服务器交互的过程中了，网络慢的话不能一下子完成
                 // 所以设置个变量，不能出现上一次还没有完成，就触发下一次请求
                 if (!mLoadingMore
                         && newState == RecyclerView.SCROLL_STATE_IDLE
-                        && (visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-                    mLoadingMore = true;
-                    onLoadMore();
+                        && (visibleItemCount + pastVisiblesItems) >= totalItemCount
+                        && !mIsRefresh) {
+                    /**
+                     * 显示底部布局
+                     */
+                    mAdapter.showFooter();
                     if (mDataList.size() > 1) {
-                        mRecyclerviewCommon.scrollToPosition(mDataList.size() - 1);
+                        mRecyclerviewCommon.scrollToPosition(mDataList.size());
                     }
+
+                    mLoadingMore = true;
+                    // 上拉加载更多请求数据
+                    mPresenter.loadGankioFuli(mPageIndex);
                 }
             }
         });
         // 设置RecycleView的adapter
         mAdapter = new GankioAdapter(mContext, mDataList);
         mRecyclerviewCommon.setAdapter(mAdapter);
-
-        // 调用下拉刷新
-        onRefresh();
     }
 
     // SwipeRefreshLayout下拉刷新的回调方法
     @Override
     public void onRefresh() {
-        if (mIsRefresh) {
+        if (mIsRefresh || mLoadingMore) {
             return;
         }
 
@@ -185,31 +173,19 @@ public class GankioFragment extends Fragment
         mPresenter.loadGankioFuli(mPageIndex);
     }
 
-    /**
-     * 上拉加载更多请求数据
-     */
-    private void onLoadMore() {
-        mPresenter.loadGankioFuli(mPageIndex);
-    }
+    // IGankioView的3个回调方法
 
-    // IGankioView的四个回调方法
-    @Override
-    public void showProgressDialog() {
-        if (mProgressbarCommon != null) {
-            mProgressbarCommon.setVisibility(View.VISIBLE);
-        }
-    }
 
     @Override
-    public void hideProgressDialog() {
-        // 请求数据成功或者失败都会调用这个方法，所以做一些共同的操作
-        mLoadingMore = false; // 上拉加载更多的
-
-        if (mSwiperefreshCommon != null) {
+    public void hideSwipeRefreshLayoutOrFooter() {
+        if (mIsRefresh) {
+            mIsRefresh = false;
             mSwiperefreshCommon.setRefreshing(false);
         }
-        if (mProgressbarCommon != null) {
-            mProgressbarCommon.setVisibility(View.INVISIBLE);
+
+        if (mLoadingMore) {
+            mLoadingMore = false;
+            mAdapter.hideFooter();
         }
     }
 
@@ -217,22 +193,18 @@ public class GankioFragment extends Fragment
     public void updateSuccessData(List<GankioFuliItem> gankioFuliItemList) {
         // 如果是下拉刷新请求的数据，需要清空datalist
         if (mIsRefresh) {
-            mIsRefresh = false; // 表示下拉刷新的  // 这个一定要放到这里 不能放到hideProgressDialog里
-            mDataList.clear();
-            mAdapter.notifyDataSetChanged();
+           mAdapter.clear();
         }
 
-        mDataList.addAll(gankioFuliItemList);
-        mAdapter.notifyDataSetChanged();
+        mAdapter.addMore(gankioFuliItemList);
 
         mPageIndex++; // 页码加1
     }
 
     @Override
     public void showLoadFailMsg(String errMessage) {
-        mIsRefresh = false; // 表示下拉刷新的
 
-        Toast.makeText(mContext, "出错了" + errMessage, Toast.LENGTH_LONG).show();
+        Toast.makeText(mContext, errMessage, Toast.LENGTH_LONG).show();
     }
 }
 

@@ -19,7 +19,7 @@
         android:theme="@style/AppTheme.NoActionBar">
         <activity
             android:name=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppTheme.NoActionBarDrawer"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -31,17 +31,21 @@
         <activity
             android:name=".ActivityWebView"
             android:theme="@style/AppTheme.NoActionBar"
+            android:process="com.wewead.activitywebview"
             />
 
         <activity
             android:name=".mvp.zhihu.ZhiHuArticleActivity"
             android:theme="@style/AppTheme.NoActionBar"
+            android:process="com.wewead.ZhiHuArticleActivity"
             />
 
         <activity
             android:name=".mvp.gankio.fuliGallery.ActivityImageView"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppTheme.NoActionBar.blackstatusBar"
             />
+
+        <service android:name=".service.UpdateService"/>
     </application>
 
 </manifest>

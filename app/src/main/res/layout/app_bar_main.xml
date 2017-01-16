@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- CoordinatorLayout删除了fitsSystemWindows http://www.jianshu.com/p/33d33d6e80a3 -->
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     tools:context="com.huahua.weread.MainActivity">
 
     <android.support.design.widget.AppBarLayout
@@ -25,7 +25,6 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main"/>
-
+    <include layout="@layout/content_main" />
 
 </android.support.design.widget.CoordinatorLayout>

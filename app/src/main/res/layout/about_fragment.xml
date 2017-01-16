@@ -1,27 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:padding="8dp"
               android:layout_width="match_parent"
-              android:layout_height="match_parent">
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="8dp">
 
     <TextView
-        android:layout_marginTop="150dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/cardview_dark_background"
+        android:layout_marginTop="150dp"
         android:text="@string/addressLabel"
+        android:textColor="@color/colorAccent"
         android:textSize="18sp"
         />
+
     <TextView
         android:id="@+id/textview_address"
-        android:layout_marginTop="32dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/cardview_dark_background"
+        android:layout_marginTop="16dp"
+        android:textIsSelectable="true"
         android:text="@string/projectAddress"
+        android:textColor="@color/cardview_dark_background"
         android:textSize="16sp"
         />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:orientation="horizontal">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="版本："
+            android:textColor="@color/colorAccent"
+            android:textSize="16sp"
+            />
+
+        <TextView
+            android:id="@+id/versioncode_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/cardview_dark_background"
+            android:textSize="16sp"
+            />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="联系我："
+            android:textColor="@color/colorAccent"
+            android:textSize="16sp"
+            />
+
+        <TextView
+            android:id="@+id/contact_me_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"
+            android:text="958460516@qq.com"
+            android:textColor="@color/cardview_dark_background"
+            android:textSize="16sp"
+            />
+
+    </LinearLayout>
 </LinearLayout>

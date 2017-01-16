@@ -1,9 +1,13 @@
 package com.huahua.weread.mvp.weixin;
 
 import com.huahua.weread.bean.WeiXinResponse;
+import com.huahua.weread.utils.LogUtils;
 
 import rx.Subscriber;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  *
@@ -13,10 +17,12 @@ import rx.Subscription;
 
 public class WeiXinPresenter {
 
-    IWXView mView;   // 这个在构造函数里被作为参数传进来初始化，就是说持有view的一个引用
-    WXModel mModel;  // 这个直接在构造函数里new出来
+    private IWXView mView;   // 这个在构造函数里被作为参数传进来初始化，就是说持有view的一个引用
+    private WXModel mModel;  // 这个直接在构造函数里new出来
 
-    public WeiXinPresenter(IWXView view) {
+    private Subscription mSubscription = null;
+
+    WeiXinPresenter(IWXView view) {
         mView = view;
         mModel = new WXModel();
     }
@@ -29,78 +35,46 @@ public class WeiXinPresenter {
      * @param pageIndex
      */
     public void loadData(int pageIndex) {
-        // 用这句的话，不能加载第二次请求 估计
-        // 由于Subscriber一旦调用了unsubscribe方法之后，就没有用了。
-        // 且当事件传递到onError或者onCompleted之后，也会自动的解绑。
-
-        // 这样出现的一个问题就是每次发送请求都要创建新的Subscriber对象。
-        // mSubscription = mModel.loadWXjingxuan(pageIndex, mSubscriber);
-        /**
-         * 职责分明
-         * model去执行加载数据，回调不用你model处理
-         * 将回调返回来presenter处理
-         */
-
-        mSubscription = mModel.loadWXjingxuan(pageIndex, new Subscriber<WeiXinResponse>() {
-
+        mSubscription = mModel.loadWXjingxuan(pageIndex)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .onErrorReturn(new Func1<Throwable, WeiXinResponse>() {
                     @Override
-                    public void onStart() {
-                        super.onStart();
+                    public WeiXinResponse call(Throwable throwable) {
+                        LogUtils.LOGI("WeiXinPresenter", ">>>>>  onErrorReturn >>>>");
+                        throwable.printStackTrace();
+                        mView.showMsgWithLongToast("出错了,请稍后重试");
+                        return null;
                     }
-
+                })
+                .subscribe(new Subscriber<WeiXinResponse>() {
                     @Override
                     public void onCompleted() {
-
+                        mView.hideSwipeRefreshLayoutOrFooter();
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        mView.hideProgressDialog();
-                        mView.showLoadFailMsg(e.getMessage());
+                        mView.showMsgWithLongToast("出错了,请稍后重试");
+                        mView.hideSwipeRefreshLayoutOrFooter();
                     }
 
                     @Override
                     public void onNext(WeiXinResponse weiXinResponse) {
-                        mView.hideProgressDialog();
+                        if (weiXinResponse == null) {
+                            // 为什么weiXinResponse为空
+                            //    == >> observable发生了错误 执行了onErrorReturn
+                            // 不进行空判断，下面可能会报空指针异常
+                            return;
+                        }
                         if (weiXinResponse.getCode() == 200) {
                             mView.updateSuccessData(weiXinResponse.getNewslist());
                         } else {
-                            mView.showLoadFailMsg("服务器内部错误!");
+                            mView.showMsgWithLongToast("服务器内部错误!");
                         }
                     }
-        });
+                });
     }
-
-    Subscription mSubscription = null;
-
-    Subscriber<WeiXinResponse> mSubscriber = new Subscriber<WeiXinResponse>() {
-
-        @Override
-        public void onStart() {
-            super.onStart();
-        }
-
-        @Override
-        public void onCompleted() {
-
-        }
-
-        @Override
-        public void onError(Throwable e) {
-            mView.hideProgressDialog();
-            mView.showLoadFailMsg(e.getMessage());
-        }
-
-        @Override
-        public void onNext(WeiXinResponse weiXinResponse) {
-            mView.hideProgressDialog();
-            if (weiXinResponse.getCode() == 200) {
-                mView.updateSuccessData(weiXinResponse.getNewslist());
-            } else {
-                mView.showLoadFailMsg("服务器内部错误!");
-            }
-        }
-    };
 
     /**
      * 要在destroyview里执行这个方法
@@ -109,6 +83,7 @@ public class WeiXinPresenter {
         if (mSubscription != null) {
             mSubscription.unsubscribe();
         }
+        mView = null;  // 这样就没有Fragment（activity）的引用啦
     }
 
 }

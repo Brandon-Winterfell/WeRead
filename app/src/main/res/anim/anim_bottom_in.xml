@@ -2,6 +2,7 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android"
      android:duration="500">
 
+    <!-- translate 位置移动动画 -->
     <translate
         android:fromYDelta="50%"
         android:toYDelta="0%"/>
