@@ -6,15 +6,19 @@
 截图
 --------------
 
-![首页1][1] ![果壳热门][2] ![果壳热门][3]
+![首页1][1] ![果壳热门][2] ![果壳热门][3] ![微信精选][8]
 
-![新闻详情][4] ![新闻详情][5] ![福利][6]
+![新闻详情][4] ![新闻详情][5] ![福利][6] ![福利][7]
 
-![福利][7] ![微信精选][8] ![版本检测更新][9]
+![版本检测更新][9]
 
 主要用到的开源库
 ---------------
 RxJava、Retrofit2、Butterknife、easypermissions、PhotoView、Picasso、leakcanary…
+
+TODO
+---------------
+优化检测版本更新模块
 
 声明
 ---------------
@@ -30,9 +34,10 @@ RxJava、Retrofit2、Butterknife、easypermissions、PhotoView、Picasso、leakc
 ---------------
 邮箱: 958460516@qq.com  gzwenhc2013@gmail.com
 
+掘金: https://gold.xitu.io/user/56d505fc816dfa00593af627
+
 简书：http://www.jianshu.com/users/7efe1b5a00ad/timeline
 
-掘金: https://gold.xitu.io/user/56d505fc816dfa00593af627
 
 [APK]: https://github.com/Brandon-Winterfell/WeRead/releases/download/v1.1.0/WeRead_v1.1.0.apk
 [1]: images/1.png
